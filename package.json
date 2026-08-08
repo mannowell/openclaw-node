@@ -1,0 +1,17 @@
+{
+  "name": "openclaw-node",
+  "version": "1.0.0",
+  "description": "OpenClaw external scraping node (Render.com) with Tailscale mesh — POST /scrape",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "puppeteer": "^23.0.0"
+  }
+}
