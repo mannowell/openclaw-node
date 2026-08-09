@@ -46,7 +46,7 @@ COPY server.js ./
 # --- OpenClaw (multi-agent gateway) ---------------------------------------------
 # Instala o CLI do OpenClaw globalmente (config gerada por scripts/init-openclaw.mjs
 # a partir das env vars a cada boot — estado fresco por design no Render)
-RUN npm i -g openclaw
+RUN npm i -g openclaw && openclaw --version
 
 COPY scripts/ ./scripts/
 
