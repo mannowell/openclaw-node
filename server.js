@@ -85,9 +85,19 @@ app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 // === Diagnóstico do gateway OpenClaw (para debug sem acesso ao painel) ===
 app.get("/gateway/log", (_req, res) => {
   try {
-    const log = fs.existsSync("/app/openclaw-gateway.log")
-      ? fs.readFileSync("/app/openclaw-gateway.log", "utf8").slice(-4000)
-      : "(log não existe)";
+    let log = "";
+    const mainLog = "/app/openclaw-gateway.log";
+    if (fs.existsSync(mainLog)) log += fs.readFileSync(mainLog, "utf8").slice(-4000) + "\n";
+    // Logs internos do OpenClaw (têm detalhes de crash que o nohup pode perder)
+    const openclawDir = "/tmp/openclaw";
+    if (fs.existsSync(openclawDir)) {
+      for (const f of fs.readdirSync(openclawDir)) {
+        if (f.endsWith(".log")) {
+          log += `\n--- /tmp/openclaw/${f} ---\n` + fs.readFileSync(`${openclawDir}/${f}`, "utf8").slice(-2000) + "\n";
+        }
+      }
+    }
+    if (!log) log = "(log não existe)";
     res.type("text/plain").send(log);
   } catch (e) {
     res.status(500).send(String(e));
@@ -97,7 +107,9 @@ app.get("/gateway/log", (_req, res) => {
 app.get("/gateway/status", (_req, res) => {
   try {
     const procs = execSync("ps aux | grep -E 'openclaw.*gateway' | grep -v grep || true").toString();
-    res.json({ gatewayProcesses: procs });
+    let mem = "";
+    try { mem = execSync("free -m").toString(); } catch {}
+    res.json({ gatewayProcesses: procs, memory: mem });
   } catch (e) {
     res.status(500).json({ error: String(e) });
   }

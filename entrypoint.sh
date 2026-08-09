@@ -62,7 +62,13 @@ if [ -z "$OPENCLAW_BIN" ]; then
   npm ls -g 2>&1 | head -10
 else
   echo "[entrypoint] OpenClaw binário: $OPENCLAW_BIN"
-  nohup node "$OPENCLAW_BIN" gateway --port 18789 --allow-unconfigured --force > /app/openclaw-gateway.log 2>&1 &
+  # Loga o start + captura o EXIT CODE quando o gateway morrer (137=SIGKILL/OOM,
+  # 1=erro, etc.) — diagnóstico vital em container efêmero sem journald.
+  echo "[entrypoint] $(date -u +%FT%TZ) starting gateway PID=$$ (log segue)" > /app/openclaw-gateway.log
+  nohup node "$OPENCLAW_BIN" gateway --port 18789 --allow-unconfigured --force >> /app/openclaw-gateway.log 2>&1 &
+  GWPID=$!
+  echo "[entrypoint] gateway PID=$GWPID" >> /app/openclaw-gateway.log
+  ( wait "$GWPID"; echo "[entrypoint] GATEWAY EXITED code=$? at $(date -u +%FT%TZ)" >> /app/openclaw-gateway.log ) &
   sleep 3
 fi
 

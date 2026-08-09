@@ -19,6 +19,16 @@ services:
       # GROQ_API_KEY | OPENROUTER_API_KEY | OPENAI_API_KEY | DEEPSEEK_API_KEY | TOGETHER_API_KEY | ANTHROPIC_API_KEY
       - key: GROQ_API_KEY
         sync: false
-      # Telegram: token do bot (criar via @BotFather) — definir no painel
+      # Telegram: token do bot (criar via @BotFather) — definir no painel.
+      # TELEGRAM_BOT_TOKEN_2 tem prioridade sobre TELEGRAM_BOT_TOKEN (swap sem apagar).
       - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN_2
+        sync: false
+      # OPENCLAW_OWNER_ID: Telegram ID do dono (default telegram:7648987349)
+      - key: OPENCLAW_OWNER_ID
+        sync: false
+      # OPENCLAW_PROVIDERS (opcional): limitar providers p/ reduzir RAM no boot.
+      # Ex.: "groq" = só Groq (menos plugins instalados, menos risco de OOM no free).
+      - key: OPENCLAW_PROVIDERS
         sync: false

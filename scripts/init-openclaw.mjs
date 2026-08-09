@@ -22,9 +22,16 @@ const PROVIDERS = [
 
 const providers = {};
 const modelIds = [];
+// OPENCLAW_PROVIDERS (opcional): lista de providers a usar, ex. "groq,deepseek".
+// Reduz o nº de plugins instalados no boot → menos RAM (crítico no Render free).
+const only = (process.env.OPENCLAW_PROVIDERS || "")
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
 for (const p of PROVIDERS) {
   const key = process.env[p.key];
   if (!key) continue;
+  if (only.length > 0 && !only.includes(p.name)) continue;
   providers[p.name] = {
     baseUrl: p.base,
     apiKey: key,
