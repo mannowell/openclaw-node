@@ -80,6 +80,95 @@ app.post("/scrape", async (req, res) => {
 // Health check separado para o Render
 app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 
+// === IA / Chat (usa as env vars configuradas no Render) ===
+const PROVIDERS = [
+  { key: "GROQ_API_KEY",       name: "groq",       base: "https://api.groq.com/openai/v1",                 defaultModel: "llama-3.3-70b-versatile" },
+  { key: "OPENROUTER_API_KEY", name: "openrouter", base: "https://openrouter.ai/api/v1",                   defaultModel: "meta-llama/llama-3.3-70b-instruct" },
+  { key: "OPENAI_API_KEY",     name: "openai",     base: "https://api.openai.com/v1",                      defaultModel: "gpt-4o-mini" },
+  { key: "TOGETHER_API_KEY",   name: "together",   base: "https://api.together.xyz/v1",                    defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
+  { key: "DEEPSEEK_API_KEY",   name: "deepseek",   base: "https://api.deepseek.com/v1",                    defaultModel: "deepseek-chat" },
+  { key: "ANTHROPIC_API_KEY",  name: "anthropic",  base: "https://api.anthropic.com/v1",                   defaultModel: "claude-3-5-haiku-latest" },
+];
+
+function detectedProvider() {
+  return PROVIDERS.find((p) => process.env[p.key]);
+}
+
+// Lista QUAL provider está configurado (sem expor valores)
+app.get("/ai/config", (_req, res) => {
+  const configured = PROVIDERS.filter((p) => process.env[p.key]).map((p) => ({
+    provider: p.name,
+    base: p.base,
+    model: process.env[`${p.name.toUpperCase()}_MODEL`] || p.defaultModel,
+  }));
+  const baseUrl = process.env.OPENAI_BASE_URL;
+  const globalModel = process.env.MODEL;
+  res.json({
+    ok: true,
+    count: configured.length,
+    configured,
+    baseUrl: baseUrl || "default",
+    model: globalModel || configured[0]?.model || null,
+  });
+});
+
+/**
+ * POST /chat
+ * Body: { prompt, system?, model? }
+ * Usa o primeiro provider disponível (GROQ → OpenRouter → OpenAI → ...)
+ * endpoint compatível com OpenAI: /chat/completions
+ */
+app.post("/chat", async (req, res) => {
+  const { prompt, system, model } = req.body || {};
+  if (!prompt) return res.status(400).json({ error: "Campo 'prompt' é obrigatório" });
+
+  const provider = detectedProvider();
+  if (!provider) {
+    return res.status(503).json({
+      ok: false,
+      error: "Nenhuma chave de IA configurada no Render (ex.: GROQ_API_KEY, OPENROUTER_API_KEY, OPENAI_API_KEY)",
+    });
+  }
+
+  const apiKey = process.env[provider.key];
+  const chosenModel =
+    model || process.env[`${provider.name.toUpperCase()}_MODEL`] || process.env.MODEL || provider.defaultModel;
+  const baseUrl = process.env.OPENAI_BASE_URL || provider.base;
+
+  try {
+    const r = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: chosenModel,
+        messages: [
+          ...(system ? [{ role: "system", content: system }] : []),
+          { role: "user", content: prompt },
+        ],
+      }),
+    });
+
+    const data = await r.json();
+    if (!r.ok) {
+      return res.status(502).json({ ok: false, provider: provider.name, error: data?.error?.message || `HTTP ${r.status}` });
+    }
+
+    const reply = data?.choices?.[0]?.message?.content?.trim();
+    res.json({
+      ok: true,
+      provider: provider.name,
+      model: chosenModel,
+      reply,
+      usage: data?.usage || undefined,
+    });
+  } catch (err) {
+    res.status(502).json({ ok: false, error: err.message });
+  }
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`openclaw-node listening on :${PORT}`);
 });
