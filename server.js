@@ -1,5 +1,7 @@
 import express from "express";
 import puppeteer from "puppeteer";
+import fs from "node:fs";
+import { execSync } from "node:child_process";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -79,6 +81,27 @@ app.post("/scrape", async (req, res) => {
 
 // Health check separado para o Render
 app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+
+// === Diagnóstico do gateway OpenClaw (para debug sem acesso ao painel) ===
+app.get("/gateway/log", (_req, res) => {
+  try {
+    const log = fs.existsSync("/app/openclaw-gateway.log")
+      ? fs.readFileSync("/app/openclaw-gateway.log", "utf8").slice(-4000)
+      : "(log não existe)";
+    res.type("text/plain").send(log);
+  } catch (e) {
+    res.status(500).send(String(e));
+  }
+});
+
+app.get("/gateway/status", (_req, res) => {
+  try {
+    const procs = execSync("ps aux | grep -E 'openclaw.*gateway' | grep -v grep || true").toString();
+    res.json({ gatewayProcesses: procs });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
 
 // === IA / Chat (usa as env vars configuradas no Render) ===
 const PROVIDERS = [

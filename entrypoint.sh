@@ -46,7 +46,7 @@ node /app/scripts/init-openclaw.mjs || echo "[entrypoint] AVISO: falha ao gerar 
 
 # 5. Sobe o gateway OpenClaw em background (porta interna 18789)
 echo "[entrypoint] Iniciando gateway OpenClaw (porta 18789)..."
-nohup openclaw gateway --port 18789 > /app/openclaw-gateway.log 2>&1 &
+nohup openclaw gateway --port 18789 --allow-unconfigured --force > /app/openclaw-gateway.log 2>&1 &
 sleep 3
 
 # 6. Inicia a API Node.js imediatamente para responder ao Render na porta 10000

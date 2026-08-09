@@ -40,6 +40,15 @@ if (Object.keys(providers).length === 0) {
 const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.OPENCLAW_TELEGRAM_BOT_TOKEN || "";
 
 const config = {
+  gateway: {
+    mode: "local",
+    bind: "loopback",
+    port: 18789,
+    auth: { mode: "none" },
+  },
+  commands: {
+    ownerAllowFrom: [process.env.OPENCLAW_OWNER_ID || "telegram:7648987349"],
+  },
   agents: {
     defaults: {
       model: {
@@ -66,6 +75,8 @@ const config = {
     telegram: {
       enabled: Boolean(botToken),
       botToken: botToken || "",
+      dmPolicy: "pairing",
+      groupPolicy: "allowlist",
     },
   },
 };
