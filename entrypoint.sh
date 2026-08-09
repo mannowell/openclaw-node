@@ -1,27 +1,28 @@
 #!/bin/sh
 # ============================================================
-# openclaw-node — entrypoint (Render)
-# 1. Tailscale (userspace) + auth (ephemeralidade definida na authkey)
+# openclaw-node — entrypoint (Render / Northflank)
+# 1. Tailscale (userspace) + auth — SOMENTE se TAILSCALE_AUTHKEY
+#    existir (no Northflank é opcional: polling do Telegram é outbound)
 # 2. Gera config do OpenClaw a partir das env vars
 # 3. Sobe gateway OpenClaw (18789, bg)
 # 4. Exporta TAILSCALE_IP (lido pelo server.js no "/")
 # 5. Sobe API Node (10000, foreground)
 # ============================================================
 
-# 1. Inicia o daemon do Tailscale em modo userspace
-echo "[entrypoint] Iniciando tailscaled (userspace)..."
-tailscaled --tun=userspace-networking --outbound-http-proxy-listen=localhost:1055 &
-sleep 3
-
-# 2. Autentica no Tailscale (se houver chave)
+# 1. Tailscale é opcional: só inicia se houver chave (poupa RAM no Northflank)
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
+    echo "[entrypoint] Iniciando tailscaled (userspace)..."
+    tailscaled --tun=userspace-networking --outbound-http-proxy-listen=localhost:1055 &
+    sleep 3
+
+    # 2. Autentica no Tailscale
     echo "[entrypoint] Autenticando no Tailscale..."
     # A ephemeralidade é definida na PRÓPRIA AUTHKEY (Tailscale admin console),
     # não no CLI. Sem --ephemeral aqui: o comando up usa a config da chave.
     tailscale up --authkey="${TAILSCALE_AUTHKEY}" --hostname=openclaw-node \
         --accept-dns=false --reset &
 else
-    echo "[entrypoint] AVISO: TAILSCALE_AUTHKEY não definida — sem malha privada."
+    echo "[entrypoint] TAILSCALE_AUTHKEY não definida — sem malha privada (OK no Northflank)."
 fi
 
 # 3. Espera até 30s pelo IP (não bloqueia o app se falhar)
@@ -72,6 +73,6 @@ else
   sleep 3
 fi
 
-# 6. Inicia a API Node.js imediatamente para responder ao Render na porta 10000
+# 6. Inicia a API Node.js imediatamente (saúde/logs — Render ou Northflank)
 echo "[entrypoint] Subindo API na porta ${PORT:-10000}..."
 exec node server.js
