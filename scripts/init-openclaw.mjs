@@ -24,12 +24,14 @@ const PROVIDERS = [
 // 12000 tokens por minuto (TPM) — um prompt de ~25k tokens (contextTokens 65536 +
 // bootstrap grande + dezenas de tool-schemas) leva a HTTP 413 "Request too large"
 // e o bot fica mudo.
-// Nota: o overhead fixo do sistema do OpenClaw (system prompt + role + 1 tool)
-// é ~7k tokens, então contextTokens precisa cobrir isso (10000 = budget 7000 p/
-// precheck de overflow). Request real ~6k tokens < 12k TPM. Em rajada (>2 msgs/
-// min) o Groq pode 413 e o fallback (openai/gpt-4o-mini) assume. Ajustável por env.
-const contextTokens = Number(process.env.OPENCLAW_CONTEXT_TOKENS || 10000);
-const contextWindow = Number(process.env.OPENCLAW_MODEL_CONTEXT_WINDOW || 12000);
+// Obs: o overhead fixo do OpenClaw (system prompt + role + tool) é ~5.4k tokens,
+// então contextTokens precisa cobrir isso. O precheck reserva metade do
+// contextTokens para tool-results no meio do turno (budget = contextTokens/2),
+// por isso 13000 → budget 6500 > prompt estimado ~6046. Request real ~6k < 12k
+// TPM. Em rajada (>2 msgs/min) o Groq pode 413 e o fallback (openai/gpt-4o-mini)
+// assume. Ajustável por env.
+const contextTokens = Number(process.env.OPENCLAW_CONTEXT_TOKENS || 13000);
+const contextWindow = Number(process.env.OPENCLAW_MODEL_CONTEXT_WINDOW || 20000);
 const bootstrapMaxChars = Number(process.env.OPENCLAW_BOOTSTRAP_MAX_CHARS || 600);
 // tools.profile: "minimal" expõe só session_status (vs. "full" que expõe ~30+
 // ferramentas core + schemas enormes no prompt do modelo). Maior alavanca de
@@ -93,6 +95,7 @@ const config = {
       },
       bootstrapMaxChars,
       contextTokens,
+      startupContext: { enabled: false },
       heartbeat: { every: "" },
     },
     list: [
