@@ -1,6 +1,7 @@
 # openclaw-node — API de scraping com Tailscale embutido
 # Imagem otimizada para Render.com (porta 10000)
-FROM node:20-slim AS base
+# Node 22+ REQUERIDO pelo OpenClaw (>=22.22.3); node:20 rejeita o pacote.
+FROM node:22-slim AS base
 
 # Dependências do Puppeteer/Chromium no Debian slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -46,7 +47,9 @@ COPY server.js ./
 # --- OpenClaw (multi-agent gateway) ---------------------------------------------
 # Instala o CLI do OpenClaw globalmente (config gerada por scripts/init-openclaw.mjs
 # a partir das env vars a cada boot — estado fresco por design no Render)
-RUN npm i -g openclaw && openclaw --version
+# ⚠️ VERSÃO FIXA: `npm i -g openclaw` (sem versão) instala um PLACEHOLDER 0.0.1
+# (nome de pacote sequestrado no registry). Sempre fixar a versão exata.
+RUN npm i -g openclaw@2026.7.1-2 && openclaw --version
 
 COPY scripts/ ./scripts/
 
