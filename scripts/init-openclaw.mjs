@@ -37,7 +37,12 @@ if (Object.keys(providers).length === 0) {
   console.error("[init-openclaw] Nenhuma chave de IA encontrada (GROQ_API_KEY, OPENROUTER_API_KEY, OPENAI_API_KEY...). Usando catálogo default.");
 }
 
-const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.OPENCLAW_TELEGRAM_BOT_TOKEN || "";
+// Token do bot: prioridade TELEGRAM_BOT_TOKEN_2 (novo bot) > TELEGRAM_BOT_TOKEN > OPENCLAW_TELEGRAM_BOT_TOKEN
+const botToken =
+  process.env.TELEGRAM_BOT_TOKEN_2 ||
+  process.env.TELEGRAM_BOT_TOKEN ||
+  process.env.OPENCLAW_TELEGRAM_BOT_TOKEN ||
+  "";
 
 const config = {
   gateway: {
@@ -75,7 +80,10 @@ const config = {
     telegram: {
       enabled: Boolean(botToken),
       botToken: botToken || "",
-      dmPolicy: "pairing",
+      // allowlist (em vez de pairing): o dono (ownerAllowFrom) é aceito direto,
+      // sem pareamento manual — crítico em container efêmero (Render), onde o
+      // estado de pairing reseta a cada deploy e deixaria o dono no silêncio.
+      dmPolicy: "allowlist",
       groupPolicy: "allowlist",
     },
   },
