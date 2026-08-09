@@ -32,7 +32,9 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD curl -fs http://127.0.0.1:10000/healthz || exit 1
 
 # Entrypoint: Tailscale + API
+# dos2unix corrige quebras de linha CRLF (Windows) que quebram o script no Linux
+RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
