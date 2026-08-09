@@ -16,10 +16,10 @@ sleep 3
 # 2. Autentica no Tailscale (se houver chave)
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
     echo "[entrypoint] Autenticando no Tailscale..."
-    # --ephemeral: remove nós órfãos quando o container cai (sem acúmulo de -2, -3...)
-    # --reset: reutiliza identidade do nó com mesmo hostname
+    # A ephemeralidade é definida na PRÓPRIA AUTHKEY (Tailscale admin console),
+    # não no CLI. Sem --ephemeral aqui: o comando up usa a config da chave.
     tailscale up --authkey="${TAILSCALE_AUTHKEY}" --hostname=openclaw-node \
-        --accept-dns=false --reset --ephemeral &
+        --accept-dns=false --reset &
 else
     echo "[entrypoint] AVISO: TAILSCALE_AUTHKEY não definida — sem malha privada."
 fi
