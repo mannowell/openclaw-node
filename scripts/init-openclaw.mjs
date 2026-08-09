@@ -23,11 +23,14 @@ const PROVIDERS = [
 // Orçamento de tokens. LIMITE CRÍTICO: o plano free do Groq limita o prompt a
 // 12000 tokens por minuto (TPM) — um prompt de ~25k tokens (contextTokens 65536 +
 // bootstrap grande + dezenas de tool-schemas) leva a HTTP 413 "Request too large"
-// e o bot fica mudo. Valores baixos = prompt pequeno, sem estourar o TPM.
-// Ajustáveis por env.
-const contextTokens = Number(process.env.OPENCLAW_CONTEXT_TOKENS || 6000);
+// e o bot fica mudo.
+// Nota: o overhead fixo do sistema do OpenClaw (system prompt + role + 1 tool)
+// é ~7k tokens, então contextTokens precisa cobrir isso (10000 = budget 7000 p/
+// precheck de overflow). Request real ~6k tokens < 12k TPM. Em rajada (>2 msgs/
+// min) o Groq pode 413 e o fallback (openai/gpt-4o-mini) assume. Ajustável por env.
+const contextTokens = Number(process.env.OPENCLAW_CONTEXT_TOKENS || 10000);
 const contextWindow = Number(process.env.OPENCLAW_MODEL_CONTEXT_WINDOW || 12000);
-const bootstrapMaxChars = Number(process.env.OPENCLAW_BOOTSTRAP_MAX_CHARS || 1500);
+const bootstrapMaxChars = Number(process.env.OPENCLAW_BOOTSTRAP_MAX_CHARS || 600);
 // tools.profile: "minimal" expõe só session_status (vs. "full" que expõe ~30+
 // ferramentas core + schemas enormes no prompt do modelo). Maior alavanca de
 // redução de tokens. Valores: minimal | coding | messaging | full.
