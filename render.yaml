@@ -21,11 +21,15 @@ services:
         sync: false
       # Telegram: token do bot (criar via @BotFather) — definir no painel.
       # TELEGRAM_BOT_TOKEN_2 tem prioridade sobre TELEGRAM_BOT_TOKEN (swap sem apagar).
+      #   TELEGRAM_BOT_TOKEN_2 = token do bot Dev @Devmannohermes_bot  (8815143115:...)
+      #   TELEGRAM_BOT_TOKEN   = token do bot Boss @bossmanno_bot     (8419575752:...)
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_BOT_TOKEN_2
         sync: false
-      # OPENCLAW_OWNER_ID: Telegram ID do dono (default telegram:7648987349)
+      # OPENCLAW_OWNER_ID: Telegram ID do dono. Pode ser "7648987349" ou
+      # "telegram:7648987349" — o init-openclaw.mjs normaliza para "telegram:<id>"
+      # (formato exato exigido pelo allowlist do OpenClaw para DMs).
       - key: OPENCLAW_OWNER_ID
         sync: false
       # OPENCLAW_PROVIDERS (opcional): limitar providers p/ reduzir RAM no boot.

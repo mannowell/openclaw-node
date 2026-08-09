@@ -44,6 +44,21 @@ Render.com (container)
   └─ node server.js (Express + Puppeteer)   → :10000
 ```
 
+## Integração Telegram (OpenClaw gateway)
+
+O gateway OpenClaw (porta interna `18789`) recebe DMs e comandos do bot configurado
+em `channels.telegram.botToken` (gerado por `scripts/init-openclaw.mjs` a partir das env vars):
+
+- `channels.telegram.enabled = true`
+- `channels.telegram.dmPolicy = "allowlist"` — sem pareamento; DMs só de quem está no `allowFrom`
+- `channels.telegram.allowFrom = ["telegram:<chat_id>"]` — formato EXATO exigido: o OpenClaw
+  constrói o senderId de DMs como `telegram:<chatId>` e o allowlist casa por igualdade exata.
+- `commands.ownerAllowFrom = ["telegram:<chat_id>"]` — dono para comandos de controlo
+
+Configure no Render:
+- `TELEGRAM_BOT_TOKEN_2` (prioridade) ou `TELEGRAM_BOT_TOKEN` → token do bot
+- `OPENCLAW_OWNER_ID` → `7648987349` (o script normaliza para `telegram:7648987349`)
+
 ## Deploy no Render
 1. Cria um **Web Service** a partir deste repo
 2. **Env vars**: `TAILSCALE_AUTHKEY` (auth key de Tailscale), `PORT=10000` (opcional, Render define)

@@ -51,6 +51,14 @@ const botToken =
   process.env.OPENCLAW_TELEGRAM_BOT_TOKEN ||
   "";
 
+// ID do dono (OPENCLAW_OWNER_ID). O OpenClaw constrói o senderId de DMs do
+// Telegram como "telegram:<chatId>" e o allowlist casa por IGUALDADE EXATA
+// (allow.entries.includes(senderId)). Por isso "7648987349" sem o prefixo
+// "telegram:" NÃO casa e em dmPolicy=allowlist toda DM é descartada em silêncio.
+// Normaliza para aceitar o valor com ou sem prefixo (e com "@" à frente).
+const rawOwner = (process.env.OPENCLAW_OWNER_ID || "telegram:7648987349").trim();
+const ownerId = /^telegram:/i.test(rawOwner) ? rawOwner : `telegram:${rawOwner.replace(/^@/, "")}`;
+
 const config = {
   gateway: {
     mode: "local",
@@ -59,7 +67,7 @@ const config = {
     auth: { mode: "none" },
   },
   commands: {
-    ownerAllowFrom: [process.env.OPENCLAW_OWNER_ID || "telegram:7648987349"],
+    ownerAllowFrom: [ownerId],
   },
   agents: {
     defaults: {
@@ -93,7 +101,7 @@ const config = {
       // ⚠️ OBRIGATÓRIO: dmPolicy="allowlist" exige allowFrom preenchido, senão
       // "all DMs will be dropped" (ownerAllowFrom NÃO alimenta allowFrom).
       dmPolicy: "allowlist",
-      allowFrom: [process.env.OPENCLAW_OWNER_ID || "telegram:7648987349"],
+      allowFrom: [ownerId],
       groupPolicy: "allowlist",
     },
   },
