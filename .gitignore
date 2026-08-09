@@ -1,0 +1,4 @@
+# Segredos — nunca commitar (repo é público)
+.env
+.env.*
+!.env.example
