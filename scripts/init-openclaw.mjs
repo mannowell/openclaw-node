@@ -20,6 +20,19 @@ const PROVIDERS = [
   { key: "ANTHROPIC_API_KEY",  name: "anthropic",  base: "https://api.anthropic.com/v1",     model: process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-latest" },
 ];
 
+// Orçamento de tokens. LIMITE CRÍTICO: o plano free do Groq limita o prompt a
+// 12000 tokens por minuto (TPM) — um prompt de ~25k tokens (contextTokens 65536 +
+// bootstrap grande + dezenas de tool-schemas) leva a HTTP 413 "Request too large"
+// e o bot fica mudo. Valores baixos = prompt pequeno, sem estourar o TPM.
+// Ajustáveis por env.
+const contextTokens = Number(process.env.OPENCLAW_CONTEXT_TOKENS || 6000);
+const contextWindow = Number(process.env.OPENCLAW_MODEL_CONTEXT_WINDOW || 12000);
+const bootstrapMaxChars = Number(process.env.OPENCLAW_BOOTSTRAP_MAX_CHARS || 1500);
+// tools.profile: "minimal" expõe só session_status (vs. "full" que expõe ~30+
+// ferramentas core + schemas enormes no prompt do modelo). Maior alavanca de
+// redução de tokens. Valores: minimal | coding | messaging | full.
+const toolProfile = process.env.OPENCLAW_TOOL_PROFILE || "minimal";
+
 const providers = {};
 const modelIds = [];
 // OPENCLAW_PROVIDERS (opcional): lista de providers a usar, ex. "groq,deepseek".
@@ -35,7 +48,7 @@ for (const p of PROVIDERS) {
   providers[p.name] = {
     baseUrl: p.base,
     apiKey: key,
-    models: [{ id: p.model, name: p.model, api: "openai-completions", contextWindow: 128000 }],
+    models: [{ id: p.model, name: p.model, api: "openai-completions", contextWindow }],
   };
   modelIds.push(`${p.name}/${p.model}`);
 }
@@ -75,8 +88,8 @@ const config = {
         primary: modelIds[0] || "groq/llama-3.3-70b-versatile",
         fallbacks: modelIds.slice(1),
       },
-      bootstrapMaxChars: 6000,
-      contextTokens: 65536,
+      bootstrapMaxChars,
+      contextTokens,
       heartbeat: { every: "" },
     },
     list: [
@@ -91,6 +104,7 @@ const config = {
     ],
   },
   models: { providers },
+  tools: { profile: toolProfile },
   channels: {
     telegram: {
       enabled: Boolean(botToken),
