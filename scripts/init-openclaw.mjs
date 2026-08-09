@@ -83,7 +83,10 @@ const config = {
       // allowlist (em vez de pairing): o dono (ownerAllowFrom) é aceito direto,
       // sem pareamento manual — crítico em container efêmero (Render), onde o
       // estado de pairing reseta a cada deploy e deixaria o dono no silêncio.
+      // ⚠️ OBRIGATÓRIO: dmPolicy="allowlist" exige allowFrom preenchido, senão
+      // "all DMs will be dropped" (ownerAllowFrom NÃO alimenta allowFrom).
       dmPolicy: "allowlist",
+      allowFrom: [process.env.OPENCLAW_OWNER_ID || "telegram:7648987349"],
       groupPolicy: "allowlist",
     },
   },
