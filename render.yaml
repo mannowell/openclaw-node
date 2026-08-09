@@ -1,4 +1,7 @@
 # render.yaml — deploy do openclaw-node no Render.com
+# Serviço: API de scraping (porta 10000) + OpenClaw gateway (porta 18789)
+# ⚠️ Estado do OpenClaw é gerado por ENV VARS a cada boot (idempotente);
+#    workspaces/SOUL/memória NÃO persistem entre deploys (por design no Render).
 services:
   - type: web
     name: openclaw-node
@@ -9,5 +12,13 @@ services:
     envVars:
       - key: PORT
         value: 10000
+      # Tailscale: chave de auth (reutilizável!) — definir no painel do Render
       - key: TAILSCALE_AUTHKEY
-        sync: false  # definis no painel do Render (ou via API)
+        sync: false  # definida no painel do Render (ou via API)
+      # IA: use ao menos UMA das chaves abaixo (nome EXATO importa!)
+      # GROQ_API_KEY | OPENROUTER_API_KEY | OPENAI_API_KEY | DEEPSEEK_API_KEY | TOGETHER_API_KEY | ANTHROPIC_API_KEY
+      - key: GROQ_API_KEY
+        sync: false
+      # Telegram: token do bot (criar via @BotFather) — definir no painel
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false

@@ -24,6 +24,13 @@ RUN npm ci --omit=dev || npm install --omit=dev
 
 COPY server.js ./
 
+# --- OpenClaw (multi-agent gateway) ---------------------------------------------
+# Instala o CLI do OpenClaw globalmente (config gerada por scripts/init-openclaw.mjs
+# a partir das env vars a cada boot — estado fresco por design no Render)
+RUN npm i -g openclaw
+
+COPY scripts/ ./scripts/
+
 # Porta padrão do Render
 ENV PORT=10000
 EXPOSE 10000

@@ -11,5 +11,14 @@ else
     echo "AVISO: TAILSCALE_AUTHKEY não encontrada."
 fi
 
-# 3. Inicia a API Node.js imediatamente para responder ao Render na porta 10000
+# 3. Gera a configuração do OpenClaw a partir das env vars (idempotente)
+echo "Gerando config do OpenClaw..."
+node /app/scripts/init-openclaw.mjs || echo "AVISO: falha ao gerar config OpenClaw (continua sem gateway)"
+
+# 4. Sobe o gateway OpenClaw em background (porta interna 18789)
+echo "Iniciando gateway OpenClaw (porta 18789)..."
+nohup openclaw gateway --port 18789 > /app/openclaw-gateway.log 2>&1 &
+sleep 3
+
+# 5. Inicia a API Node.js imediatamente para responder ao Render na porta 10000
 exec node server.js
