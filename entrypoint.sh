@@ -1,7 +1,7 @@
 #!/bin/sh
 # ============================================================
 # openclaw-node — entrypoint (Render)
-# 1. Tailscale (userspace) + auth com --ephemeral
+# 1. Tailscale (userspace) + auth (ephemeralidade definida na authkey)
 # 2. Gera config do OpenClaw a partir das env vars
 # 3. Sobe gateway OpenClaw (18789, bg)
 # 4. Exporta TAILSCALE_IP (lido pelo server.js no "/")
