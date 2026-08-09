@@ -6,7 +6,7 @@ sleep 2
 # 2. Tenta autenticar no Tailscale sem bloquear a execução do script
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
     echo "Autenticando no Tailscale..."
-    tailscale up --authkey="${TAILSCALE_AUTHKEY}" --hostname=openclaw-node --accept-dns=false &
+    tailscale up --authkey="${TAILSCALE_AUTHKEY}" --hostname=openclaw-node --accept-dns=false --reset &
 else
     echo "AVISO: TAILSCALE_AUTHKEY não encontrada."
 fi
