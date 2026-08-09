@@ -6,7 +6,11 @@ sleep 2
 # 2. Tenta autenticar no Tailscale sem bloquear a execução do script
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
     echo "Autenticando no Tailscale..."
-    tailscale up --authkey="${TAILSCALE_AUTHKEY}" --hostname=openclaw-node --accept-dns=false --reset &
+    # --ephemeral: nós efêmeros são removidos automaticamente do tailnet
+    # quando o container cai/desconecta — evita acúmulo de instâncias
+    # órfãs (openclaw-node-1, openclaw-node-2, ...) a cada deploy.
+    # --reset: reaproveita a identidade/sessão do nó com o mesmo hostname.
+    tailscale up --authkey="${TAILSCALE_AUTHKEY}" --hostname=openclaw-node --accept-dns=false --reset --ephemeral &
 else
     echo "AVISO: TAILSCALE_AUTHKEY não encontrada."
 fi
