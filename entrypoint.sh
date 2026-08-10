@@ -63,13 +63,13 @@ if [ -z "$OPENCLAW_BIN" ]; then
   npm ls -g 2>&1 | head -10
 else
   echo "[entrypoint] OpenClaw binário: $OPENCLAW_BIN"
-  # Loga o start + captura o EXIT CODE quando o gateway morrer (137=SIGKILL/OOM,
-  # 1=erro, etc.) — diagnóstico vital em container efêmero sem journald.
-  echo "[entrypoint] $(date -u +%FT%TZ) starting gateway PID=$$ (log segue)" > /app/openclaw-gateway.log
-  nohup node "$OPENCLAW_BIN" gateway --port 18789 --allow-unconfigured --force >> /app/openclaw-gateway.log 2>&1 &
-  GWPID=$!
-  echo "[entrypoint] gateway PID=$GWPID" >> /app/openclaw-gateway.log
-  ( wait "$GWPID"; echo "[entrypoint] GATEWAY EXITED code=$? at $(date -u +%FT%TZ)" >> /app/openclaw-gateway.log ) &
+  # Loga o start. ⚠️ NÃO usar `wait` em subshell: depois do `exec node server.js`
+  # o gateway não é mais filho do subshell e `wait` retorna 127 (falso positivo
+  # "GATEWAY EXITED"). O --verbose faz o openclaw jogar o progresso no stdout,
+  # que vai para /app/openclaw-gateway.log (lido pela API em /gateway/log).
+  echo "[entrypoint] $(date -u +%FT%TZ) starting gateway (log segue)" > /app/openclaw-gateway.log
+  nohup node "$OPENCLAW_BIN" gateway --port 18789 --allow-unconfigured --force --verbose >> /app/openclaw-gateway.log 2>&1 &
+  echo "[entrypoint] gateway PID=$!" >> /app/openclaw-gateway.log
   sleep 3
 fi
 
