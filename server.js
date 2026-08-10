@@ -93,7 +93,7 @@ app.get("/gateway/log", (_req, res) => {
     if (fs.existsSync(openclawDir)) {
       for (const f of fs.readdirSync(openclawDir)) {
         if (f.endsWith(".log")) {
-          log += `\n--- /tmp/openclaw/${f} ---\n` + fs.readFileSync(`${openclawDir}/${f}`, "utf8").slice(-2000) + "\n";
+          log += `\n--- /tmp/openclaw/${f} ---\n` + fs.readFileSync(`${openclawDir}/${f}`, "utf8").slice(-20000) + "\n";
         }
       }
     }
