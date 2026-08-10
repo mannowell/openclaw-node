@@ -55,6 +55,11 @@ COPY scripts/ ./scripts/
 
 # Porta padrão do Render
 ENV PORT=10000
+# CRÍTICO (Northflank free, 0.1 vCPU/256MB): sem isso o launcher do OpenClaw
+# respawna um filho e gera V8 compile-cache do bundle inteiro no boot — trava
+# ou estoura a RAM do container. NODE_DISABLE_COMPILE_CACHE pula todo esse
+# processo (paga-se um pouco mais de tempo de import no boot).
+ENV NODE_DISABLE_COMPILE_CACHE=1
 EXPOSE 10000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
